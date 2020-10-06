@@ -13,11 +13,10 @@ int main(int argc, char *argv[]) {
     int NEIGHBOUR_TAG = 0, BASE_TAG = 1, READING_TAG = 2;
     int i, iteration, row, col;
     int left = -1, right = -1, up = -1, down = -1; // neighbours
-    int left_req = -1, right_req = -1, up_req = -1, down_req = -1;
     int sensor_reading;
-    int neighbour_readings[4] = {-1, -1, -1, -1}; // index 0 = left, 1 = right, 2 = up, 3 = down
     enum boolean { false = 0, true = 1 } simulation; 
     float simul_duration = 0.01; // simulation duration: 4 milliseconds
+    int left_reading = -999, right_reading = -999, up_reading = -999, down_reading = -999;
 
     // params for cartesian topology
     MPI_Comm comm;
@@ -78,13 +77,13 @@ int main(int argc, char *argv[]) {
                     send_msg(&sensor_reading, right, NEIGHBOUR_TAG);
                 }
 
-                if (up != MPI_PROC_NULL) {// right exists
+                if (up != MPI_PROC_NULL) {// up exists
                     printf("rank %d up\n", rank);
                     // send up to request for reading
                     send_msg(&sensor_reading, up, NEIGHBOUR_TAG);
                 }
 
-                if (down != MPI_PROC_NULL) {// right exists
+                if (down != MPI_PROC_NULL) {// down exists
                     printf("rank %d down\n", rank);
                     // send down to request for reading
                     send_msg(&sensor_reading, down, NEIGHBOUR_TAG);
@@ -94,36 +93,40 @@ int main(int argc, char *argv[]) {
             MPI_Barrier(comm);
 
             if (right != MPI_PROC_NULL) {
-                receive_msg(&right_req, right, NEIGHBOUR_TAG);
-                printf("rank %d neighbour r %d \n", rank, right_req);
-                if (sensor_reading - SENSOR_THRESHOLD < right_req && right_req < sensor_reading + SENSOR_THRESHOLD) {
+                receive_msg(&right_reading, right, NEIGHBOUR_TAG);
+                if (right_reading > -1)
+                printf("rank %d neighbour r %d \n", rank, right_reading);
+                if (sensor_reading - SENSOR_THRESHOLD < right_reading && right_reading < sensor_reading + SENSOR_THRESHOLD) {
                     printf("over t. rank %d right\n", rank);
                     send_msg(&sensor_reading, right, READING_TAG); // send reading to right
                 }
             }
 
             if (left != MPI_PROC_NULL) {
-                receive_msg(&left_req, left, NEIGHBOUR_TAG);
-                printf("rank %d neighbour l %d \n", rank, left_req);
-                if (sensor_reading - SENSOR_THRESHOLD < left_req && left_req < sensor_reading + SENSOR_THRESHOLD) {
+                receive_msg(&left_reading, left, NEIGHBOUR_TAG);
+                if (left_reading > -1)
+                printf("rank %d neighbour l %d \n", rank, left_reading);
+                if (sensor_reading - SENSOR_THRESHOLD < left_reading && left_reading < sensor_reading + SENSOR_THRESHOLD) {
                     printf("over t. rank %d left\n", rank);
                     send_msg(&sensor_reading, left, READING_TAG); // send reading to left
                 }
             }
 
             if (down != MPI_PROC_NULL) {
-                receive_msg(&down_req, down, NEIGHBOUR_TAG);
-                printf("rank %d neighbour d %d \n", rank, down_req);
-                if (sensor_reading - SENSOR_THRESHOLD < down_req && down_req < sensor_reading + SENSOR_THRESHOLD) {
+                receive_msg(&down_reading, down, NEIGHBOUR_TAG);
+                if (down_reading > -1)
+                printf("rank %d neighbour d %d \n", rank, down_reading);
+                if (sensor_reading - SENSOR_THRESHOLD < down_reading && down_reading < sensor_reading + SENSOR_THRESHOLD) {
                     printf("over t. rank %d down\n", rank);
                     send_msg(&sensor_reading, down, READING_TAG); // send reading to down
                 }
             }
 
             if (up != MPI_PROC_NULL) {
-                receive_msg(&up_req, up, NEIGHBOUR_TAG);
-                printf("rank %d neighbour u %d \n", rank, up_req);
-                if (sensor_reading - SENSOR_THRESHOLD < up_req && up_req < sensor_reading + SENSOR_THRESHOLD) {
+                receive_msg(&up_reading, up, NEIGHBOUR_TAG);
+                if (up_reading > -1)
+                printf("rank %d neighbour u %d \n", rank, up_reading);
+                if (sensor_reading - SENSOR_THRESHOLD < up_reading && up_reading < sensor_reading + SENSOR_THRESHOLD) {
                     printf("over t. rank %d up\n", rank);
                     send_msg(&sensor_reading, up, READING_TAG); // send reading to right
                 }
@@ -132,23 +135,27 @@ int main(int argc, char *argv[]) {
             MPI_Barrier(comm);
 
             if (right != MPI_PROC_NULL) {
-                receive_msg(&neighbour_readings[0], right, READING_TAG);
-                printf("!! rank %d neighbour r %d \n", rank, neighbour_readings[0]);
+                receive_msg(&right_reading, right, READING_TAG);
+                if (right_reading > -1)
+                printf("!! rank %d neighbour r %d \n", rank, right_reading);
             }
 
             if (left != MPI_PROC_NULL) {
-                receive_msg(&neighbour_readings[1], left, READING_TAG);
-                printf("!! rank %d neighbour l %d \n", rank, neighbour_readings[1]);
+                receive_msg(&left_reading, left, READING_TAG);
+                if (left_reading > -1)
+                printf("!! rank %d neighbour l %d \n", rank, left_reading);
             }
 
             if (up != MPI_PROC_NULL) {
-                receive_msg(&neighbour_readings[2], up, READING_TAG);
-                printf("!! rank %d neighbour u %d \n", rank, neighbour_readings[2]);
+                receive_msg(&up_reading, up, READING_TAG);
+                if (up_reading > -1)
+                printf("!! rank %d neighbour u %d \n", rank, up_reading);
             }
 
             if (down != MPI_PROC_NULL) {
-                receive_msg(&neighbour_readings[3], down, READING_TAG);
-                printf("!! rank %d neighbour d %d \n", rank, neighbour_readings[3]);
+                receive_msg(&down_reading, down, READING_TAG);
+                if (down_reading > -1)
+                printf("!! rank %d neighbour d %d \n", rank, down_reading);
             }
 
             MPI_Barrier(comm);

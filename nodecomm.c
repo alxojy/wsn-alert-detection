@@ -7,10 +7,12 @@ void send_msg(int *msg, int to, int tag) {
 }
 
 void receive_msg(int *holder, int from, int tag) {
-    int flag;
-    MPI_Iprobe(from, tag, MPI_COMM_WORLD, &flag, MPI_STATUS_IGNORE);
-    if (flag) { // there exists a message
-        MPI_Recv(holder, 1, MPI_INT, from, tag, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-        break;
+    int flag, i;
+    for (i = 0; i < 5; i++) {
+        MPI_Iprobe(from, tag, MPI_COMM_WORLD, &flag, MPI_STATUS_IGNORE);
+        if (flag) { // there exists a message
+            MPI_Recv(holder, 1, MPI_INT, from, tag, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            break;
+        }
     }
 }
