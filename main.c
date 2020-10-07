@@ -5,15 +5,17 @@
 #include "main.h"
 
 #define NUM_ITERATIONS 1
-#define SENSOR_THRESHOLD 5
-#define MIN_READING 0
-#define MAX_READING 10
-#define TOLERANCE_RANGE 3
+#define SENSOR_THRESHOLD 5 // if value > SENSOR_THRESHOLD => event
+#define MIN_READING 0 // min sensor node reading
+#define MAX_READING 10 // max sensor node reading
+#define TOLERANCE_RANGE 3 
+#define NEIGHBOUR_TAG 0
+#define BASE_TAG 1
+#define READING_TAG 2
 
 int main(int argc, char *argv[]) {
     int rank, size, root; // root = base station
-    int NEIGHBOUR_TAG = 0, BASE_TAG = 1, READING_TAG = 2;
-    int i, iteration, row, col;
+    int i, iteration;
     int left = -1, right = -1, up = -1, down = -1; // neighbours
     int sensor_reading;
     enum boolean { false = 0, true = 1 } simulation; 
@@ -31,24 +33,20 @@ int main(int argc, char *argv[]) {
 	MPI_Comm_size(MPI_COMM_WORLD, &size);
     root = size-1;
 
-    if (rank == root) { // base station prompts for row & col input
-        /*printf("row: "); // read row
+    if (rank == 0) { // prompt for row & col input
+        printf("col:"); // read col
         fflush(stdout);
-        scanf("%d", dim[0]);
-        printf("col: "); // read col
+        scanf("%d", &dim[0]);
+        printf("row:"); // read col
         fflush(stdout);
-        scanf("%d", dim[1]);*/
-        dim[0] = 3; dim[1] = 3;
-    }
+        scanf("%d", &dim[1]);
+    } 
 
-    MPI_Bcast(dim, 2, MPI_INT, root, MPI_COMM_WORLD); // broadcast number of rows & columns
+    MPI_Bcast(&dim, 2, MPI_INT, 0, MPI_COMM_WORLD); 
     
     if (size < (dim[0]*dim[1])+1) { // insufficient number of processes for 2d grid & base station
         printf("Insufficient number of processes. Try smaller values of row & col and larger values of processes");
     }   
-    //printf("%d %d", dim[0], dim[1]);
-    
-    MPI_Barrier(MPI_COMM_WORLD); // sync the nodes
 
     MPI_Cart_create(MPI_COMM_WORLD, 2, dim, period, reorder, &comm); // initialise cartesian topology 
 
