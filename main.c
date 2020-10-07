@@ -52,6 +52,23 @@ int main(int argc, char *argv[]) {
 
     MPI_Cart_create(MPI_COMM_WORLD, 2, dim, period, reorder, &comm); // initialise cartesian topology 
 
+    if (rank == root) {
+        sleep(3);
+        int msg = 0, flag;
+        while (msg < size) {
+            MPI_Status stat;
+            for (i = 0; i < 5; i++) {
+                MPI_Iprobe(MPI_ANY_SOURCE, BASE_TAG, MPI_COMM_WORLD, &flag, &stat);
+                if (flag) { // there exists a message
+                    MPI_Recv(&sensor_reading, 1, MPI_INT, stat.MPI_SOURCE, BASE_TAG, MPI_COMM_WORLD, &stat);
+                    printf("base-- from %d read %d\n", stat.MPI_SOURCE, sensor_reading);
+                    break;
+                }
+            }
+            msg++;
+        }
+    }
+
     for (iteration = 0; iteration < NUM_ITERATIONS; iteration++) { // run NUM_ITERATIONS times
 
         if (rank != root) { // sensor in 2d grid
@@ -167,22 +184,6 @@ int main(int argc, char *argv[]) {
 
             MPI_Barrier(comm);
 
-        }
-        else if (rank == root) {
-            sleep(3);
-            int msg = 0, flag;
-            while (msg < size) {
-                MPI_Status stat;
-                for (i = 0; i < 5; i++) {
-                    MPI_Iprobe(MPI_ANY_SOURCE, BASE_TAG, MPI_COMM_WORLD, &flag, &stat);
-                    if (flag) { // there exists a message
-                        MPI_Recv(&sensor_reading, 1, MPI_INT, stat.MPI_SOURCE, BASE_TAG, MPI_COMM_WORLD, &stat);
-                        printf("base-- from %d read %d\n", stat.MPI_SOURCE, sensor_reading);
-                        break;
-                    }
-                }
-                msg++;
-            }
         }
 
     }
