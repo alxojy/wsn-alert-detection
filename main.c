@@ -1,5 +1,7 @@
+// alxojy
 // cartesian topology https://www.codingame.com/playgrounds/47058/have-fun-with-mpi-in-c/mpi-process-topologies
 // unicast
+
 #include "main.h"
 
 #define NUM_ITERATIONS 1
@@ -155,13 +157,37 @@ int main(int argc, char *argv[]) {
                 printf("!! rank %d neighbour d %d \n", rank, down_reading);
             }
 
+            if (sensor_reading > SENSOR_THRESHOLD) {
+                // at least 2 or more similar readings, report to base station
+                if ((right_reading > -1 && left_reading > -1) || (right_reading > -1 && up_reading > -1) || 
+                (right_reading > -1 && down_reading > -1) || (left_reading > -1 && up_reading > -1) || 
+                (left_reading > -1 && down_reading > -1) || (up_reading > -1 && down_reading > -1)) 
+                    send_msg(&sensor_reading, root, BASE_TAG);
+            }
+
             MPI_Barrier(comm);
 
         }
         else if (rank == root) {
+            sleep(3);
+            int msg = 0, flag;
+            while (msg < size) {
+                MPI_Status stat;
+                for (i = 0; i < 5; i++) {
+                    MPI_Iprobe(MPI_ANY_SOURCE, BASE_TAG, MPI_COMM_WORLD, &flag, &stat);
+                    if (flag) { // there exists a message
+                        MPI_Recv(&sensor_reading, 1, MPI_INT, stat.MPI_SOURCE, BASE_TAG, MPI_COMM_WORLD, &stat);
+                        printf("base-- from %d read %d\n", stat.MPI_SOURCE, sensor_reading);
+                        break;
+                    }
+                }
+                msg++;
+            }
         }
+
     }
 
     MPI_Finalize();
     return; // exit
 }
+

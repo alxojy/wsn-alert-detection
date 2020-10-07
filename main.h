@@ -7,6 +7,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include "nodecomm.c"
+#include "nodecomm.h"
 
 #endif // MAIN_H
