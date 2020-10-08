@@ -22,6 +22,7 @@ int main(int argc, char *argv[]) {
     float simul_duration = 0.01; // simulation duration: 4 milliseconds
     int left_req = -999, right_req = -999, up_req = -999, down_req = -999;
     int left_reading = -999, right_reading = -999, up_reading = -999, down_reading = -999;
+    float start, time_taken;
 
     // params for cartesian topology
     MPI_Comm comm;
@@ -34,18 +35,19 @@ int main(int argc, char *argv[]) {
     root = size-1;
 
     if (rank == 0) { // prompt for row & col input
-        printf("col:"); // read col
-        fflush(stdout);
-        scanf("%d", &dim[0]);
-        printf("row:"); // read col
-        fflush(stdout);
-        scanf("%d", &dim[1]);
+        //printf("col:"); // read col
+        //fflush(stdout);
+        //scanf("%d", &dim[0]);
+        //printf("row:"); // read row
+        //fflush(stdout);
+        //scanf("%d", &dim[1]);
+        dim[0] = 3; dim[1] = 3;
     } 
 
-    MPI_Bcast(&dim, 2, MPI_INT, 0, MPI_COMM_WORLD); 
+    MPI_Bcast(&dim, 2, MPI_INT, 0, MPI_COMM_WORLD);  // broadcast dimensions to all processes
     
     if (size < (dim[0]*dim[1])+1) { // insufficient number of processes for 2d grid & base station
-        printf("Insufficient number of processes. Try smaller values of row & col and larger values of processes");
+        printf("Insufficient number of processes. Try smaller values of row & col or larger values of processes");
     }   
 
     MPI_Cart_create(MPI_COMM_WORLD, 2, dim, period, reorder, &comm); // initialise cartesian topology 
@@ -81,7 +83,14 @@ int main(int argc, char *argv[]) {
             sensor_reading = (random() % (MAX_READING - MIN_READING + 1)) + MIN_READING; // random sensor reading
             printf("rank %d reading %d \n", rank, sensor_reading);
 
+            start = MPI_Wtime(); // get start time
             if(sensor_reading > SENSOR_THRESHOLD) { // over threshold. trigger an event
+                // record timestamp when event is triggered
+                time_t t = time(NULL);
+                struct tm *tm = localtime(&t);
+                char *s;
+                s = asctime(tm);
+                printf("rank %d alert time %s\n", rank, s);
 
                 if (left != MPI_PROC_NULL) { // left exists 
                     printf("rank %d left\n", rank);
@@ -179,6 +188,9 @@ int main(int argc, char *argv[]) {
                 (left_reading > -1 && down_reading > -1) || (up_reading > -1 && down_reading > -1)) 
                     send_msg(&sensor_reading, root, BASE_TAG);
             }
+
+            time_taken = MPI_Wtime() - start;
+            printf("rank %d start %f time %f\n", rank, start, time_taken);
 
             MPI_Barrier(comm);
 
