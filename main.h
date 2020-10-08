@@ -18,6 +18,4 @@
 #include <time.h>
 #include "nodecomm.c"
 
-extern void sensor_node(int rank, int root, MPI_Comm comm, int coord[]);
-
 #endif // MAIN_H
