@@ -10,8 +10,8 @@ struct report_struct { // struct for node reports sent to base station
     int num_msg; // num messages compared
 };
 
-//void base_station(int rank, int size, struct report_struct report, MPI_Datatype struct_type);
-//void sensor_node(int rank, int root, MPI_Comm comm, int coord[], struct report_struct report, MPI_Datatype struct_type);
+void base_station(int rank, int size, struct report_struct report, MPI_Datatype struct_type);
+void sensor_node(int rank, int root, MPI_Comm comm, int coord[], struct report_struct report, MPI_Datatype struct_type);
 
 int main(int argc, char *argv[]) {
     int rank, size, root; // root = base station
@@ -71,149 +71,9 @@ int main(int argc, char *argv[]) {
     for (iteration = 0; iteration < NUM_ITERATIONS; iteration++) { // run NUM_ITERATIONS times
 
         if (rank != root) { // sensor in 2d grid
-            //sensor_node(rank, root, comm, coord, report, report_type);
-            int sensor_reading;
-            int left = -1, right = -1, up = -1, down = -1; // neighbours
-            int left_req = -999, right_req = -999, up_req = -999, down_req = -999;
-            int left_reading = -999, right_reading = -999, up_reading = -999, down_reading = -999;
-
-            float start, time_taken;
-            int num_msg = 0;
-            time_t t; struct tm *tm; char* tms; 
-
-            int source;
-            MPI_Cart_coords(comm, rank, 2, coord);
-            MPI_Cart_shift(comm, 1, -1, &source, &left); 
-            MPI_Cart_shift(comm, 1, 1, &source, &right); 
-            MPI_Cart_shift(comm, 0, -1, &source, &up);
-            MPI_Cart_shift(comm, 0, 1, &source, &down);
-            
-            srandom(time(NULL) | rank); // seed
-            sensor_reading = (random() % (MAX_READING - MIN_READING + 1)) + MIN_READING; // random sensor reading
-            printf("rank %d reading %d \n", rank, sensor_reading);
-
-            start = MPI_Wtime(); // get start time
-            if(sensor_reading > SENSOR_THRESHOLD) { // over threshold. trigger an event
-                // record timestamp when event is triggered
-                t = time(NULL);
-                tm = localtime(&t);
-                tms = asctime(tm);
-
-                if (left != MPI_PROC_NULL) { // left exists 
-                    send_msg(&sensor_reading, left, NEIGHBOUR_TAG); // send left to request for reading
-                    num_msg++;
-                }
-
-                if (right != MPI_PROC_NULL) { // right exists
-                    send_msg(&sensor_reading, right, NEIGHBOUR_TAG); // send right to request for reading
-                    num_msg++;
-                }
-
-                if (up != MPI_PROC_NULL) { // up exists
-                    send_msg(&sensor_reading, up, NEIGHBOUR_TAG); // send up to request for reading
-                    num_msg++;
-                }
-
-                if (down != MPI_PROC_NULL) { // down exists
-                    send_msg(&sensor_reading, down, NEIGHBOUR_TAG); // send down to request for reading
-                    num_msg++;
-                }
-            }
-
-            MPI_Barrier(comm);
-
-            if (right != MPI_PROC_NULL) {
-                receive_msg(&right_req, right, NEIGHBOUR_TAG); // try to receive request message from right
-                if (sensor_reading - SENSOR_THRESHOLD < right_req && right_req < sensor_reading + SENSOR_THRESHOLD) {
-                    send_msg(&sensor_reading, right, READING_TAG); // send reading right
-                    num_msg++;
-                }
-            }
-
-            if (left != MPI_PROC_NULL) {
-                receive_msg(&left_req, left, NEIGHBOUR_TAG); // try to receive request message from left
-                if (sensor_reading - SENSOR_THRESHOLD < left_req && left_req < sensor_reading + SENSOR_THRESHOLD) {
-                    send_msg(&sensor_reading, left, READING_TAG); // send reading left
-                    num_msg++;
-                }
-            }
-
-            if (down != MPI_PROC_NULL) {
-                receive_msg(&down_req, down, NEIGHBOUR_TAG); // try to receive request message from down
-                if (sensor_reading - SENSOR_THRESHOLD < down_req && down_req < sensor_reading + SENSOR_THRESHOLD) {
-                    send_msg(&sensor_reading, down, READING_TAG); // send reading down
-                    num_msg++;
-                }
-            }
-
-            if (up != MPI_PROC_NULL) {
-                receive_msg(&up_req, up, NEIGHBOUR_TAG); // try to receive request message from up
-                if (sensor_reading - SENSOR_THRESHOLD < up_req && up_req < sensor_reading + SENSOR_THRESHOLD) {
-                    send_msg(&sensor_reading, up, READING_TAG); // send reading up
-                    num_msg++;
-                }
-            }
-            
-            MPI_Barrier(comm);
-
-            if (right != MPI_PROC_NULL) {
-                receive_msg(&right_reading, right, READING_TAG); // try to receive requested reading from right
-            }
-
-            if (left != MPI_PROC_NULL) {
-                receive_msg(&left_reading, left, READING_TAG); // try to receive requested reading from left
-            }
-
-            if (up != MPI_PROC_NULL) {
-                receive_msg(&up_reading, up, READING_TAG); // try to receive requested reading from up
-            }
-
-            if (down != MPI_PROC_NULL) {
-                receive_msg(&down_reading, down, READING_TAG); // try to receive requested reading from down
-            }
-
-            if (sensor_reading > SENSOR_THRESHOLD) {
-                // at least 2 or more similar readings, report to base station
-                if ((right_reading > -1 && left_reading > -1) || (right_reading > -1 && up_reading > -1) || 
-                (right_reading > -1 && down_reading > -1) || (left_reading > -1 && up_reading > -1) || 
-                (left_reading > -1 && down_reading > -1) || (up_reading > -1 && down_reading > -1))  {
-
-                    time_taken = MPI_Wtime() - start;
-                    report.reading = sensor_reading;
-                    report.time_taken = time_taken;
-                    strcpy(report.timestamp, tms);
-                    report.num_msg = num_msg;
-
-                    MPI_Request req;
-                    MPI_Isend(&report, 1, report_type, root, BASE_TAG, MPI_COMM_WORLD, &req);
-                    
-                    //send_msg(&sensor_reading, root, BASE_TAG);
-                    printf("rank %d more than \n", rank);
-                    printf("rank %d alert time %s", rank, report.timestamp);
-                    printf("rank %d time %f\n", rank, report.time_taken);
-                    printf("rank %d num msg %d \n", rank, report.num_msg);
-                }
-            }
-
-            MPI_Barrier(comm);
+            sensor_node(rank, root, comm, coord, report, report_type);
         } else {
-            sleep(3);
-            int i;
-            int msg = 0, flag, sensor_reading;
-            while (msg < size-1) {
-                MPI_Status stat;
-                for (i = 0; i < size; i++) {
-                    MPI_Iprobe(MPI_ANY_SOURCE, BASE_TAG, MPI_COMM_WORLD, &flag, &stat);
-                    if (flag) { // there exists a message
-                        printf("base- ");
-                        MPI_Recv(&report, 1, report_type, stat.MPI_SOURCE, BASE_TAG, MPI_COMM_WORLD, &stat);
-                        printf("base-- from %d read %d msg %d time %s\n", stat.MPI_SOURCE, report.reading, report.num_msg, report.timestamp);
-                        break;
-                    }
-                }
-                msg++;
-            }
-            //base_station(root, size, report, report_type);
+            base_station(root, size, report, report_type);
         }
     }
 
@@ -222,7 +82,6 @@ int main(int argc, char *argv[]) {
     return; // exit
 }
 
-/*
 void base_station(int rank, int size, struct report_struct report, MPI_Datatype struct_type) {
     sleep(3);
     int i;
@@ -232,9 +91,8 @@ void base_station(int rank, int size, struct report_struct report, MPI_Datatype 
         for (i = 0; i < size; i++) {
             MPI_Iprobe(MPI_ANY_SOURCE, BASE_TAG, MPI_COMM_WORLD, &flag, &stat);
             if (flag) { // there exists a message
-                printf("base- ");
                 MPI_Recv(&report, 1, struct_type, stat.MPI_SOURCE, BASE_TAG, MPI_COMM_WORLD, &stat);
-                printf("base-- from %d read %d time %s\n", stat.MPI_SOURCE, report.reading, report.timestamp);
+                printf("base-- from %d read %d msg %d time %s", stat.MPI_SOURCE, report.reading, report.num_msg, report.timestamp);
                 break;
             }
         }
@@ -250,7 +108,7 @@ void sensor_node(int rank, int root, MPI_Comm comm, int coord[], struct report_s
 
     float start, time_taken;
     int num_msg = 0;
-    time_t t; struct tm *tm; char *s;
+    time_t t; struct tm *tm; char* tms; 
 
     int source;
     MPI_Cart_coords(comm, rank, 2, coord);
@@ -258,7 +116,7 @@ void sensor_node(int rank, int root, MPI_Comm comm, int coord[], struct report_s
     MPI_Cart_shift(comm, 1, 1, &source, &right); 
     MPI_Cart_shift(comm, 0, -1, &source, &up);
     MPI_Cart_shift(comm, 0, 1, &source, &down);
-    
+
     srandom(time(NULL) | rank); // seed
     sensor_reading = (random() % (MAX_READING - MIN_READING + 1)) + MIN_READING; // random sensor reading
     printf("rank %d reading %d \n", rank, sensor_reading);
@@ -268,7 +126,7 @@ void sensor_node(int rank, int root, MPI_Comm comm, int coord[], struct report_s
         // record timestamp when event is triggered
         t = time(NULL);
         tm = localtime(&t);
-        s = asctime(tm);
+        tms = asctime(tm);
 
         if (left != MPI_PROC_NULL) { // left exists 
             send_msg(&sensor_reading, left, NEIGHBOUR_TAG); // send left to request for reading
@@ -324,7 +182,7 @@ void sensor_node(int rank, int root, MPI_Comm comm, int coord[], struct report_s
             num_msg++;
         }
     }
-    
+
     MPI_Barrier(comm);
 
     if (right != MPI_PROC_NULL) {
@@ -352,7 +210,7 @@ void sensor_node(int rank, int root, MPI_Comm comm, int coord[], struct report_s
             time_taken = MPI_Wtime() - start;
             report.reading = sensor_reading;
             report.time_taken = time_taken;
-            report.timestamp = s;
+            strcpy(report.timestamp, tms);
             report.num_msg = num_msg;
 
             MPI_Request req;
@@ -368,4 +226,3 @@ void sensor_node(int rank, int root, MPI_Comm comm, int coord[], struct report_s
 
     MPI_Barrier(comm);
 }
-*/
