@@ -1,7 +1,6 @@
 #ifndef MAIN_H
 #define MAIN_H
 
-#define NUM_ITERATIONS 1
 #define SENSOR_THRESHOLD 5 // if value > SENSOR_THRESHOLD => event
 #define MIN_READING 0 // min sensor node reading
 #define MAX_READING 10 // max sensor node reading

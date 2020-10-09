@@ -15,10 +15,10 @@ void sensor_node(int rank, int root, MPI_Comm comm, int coord[], struct report_s
 
 int main(int argc, char *argv[]) {
     int rank, size, root; // root = base station
-    int iteration, i;
+    int iteration, i, num_iterations;
     int sensor_reading;
     enum boolean { false = 0, true = 1 } simulation; 
-    float simul_duration = 0.01; // simulation duration: 4 milliseconds
+    float simul_duration, sim_end; // simulation duration: 4 milliseconds
 
     // params for cartesian topology
     MPI_Comm comm;
@@ -37,10 +37,18 @@ int main(int argc, char *argv[]) {
         //printf("row:"); // read row
         //fflush(stdout);
         //scanf("%d", &dim[1]);
+        printf("number of intervals:"); // read row
+        fflush(stdout);
+        scanf("%d", &num_iterations);
+        printf("interval (ie. 0.001):"); // read row
+        fflush(stdout);
+        scanf("%f", &simul_duration);
         dim[0] = 3; dim[1] = 3;
     } 
 
     MPI_Bcast(&dim, 2, MPI_INT, 0, MPI_COMM_WORLD);  // broadcast dimensions to all processes
+    MPI_Bcast(&num_iterations, 1, MPI_INT, 0, MPI_COMM_WORLD); // broadcast number of iterations to all processes
+    MPI_Bcast(&simul_duration, 1, MPI_FLOAT, 0, MPI_COMM_WORLD); // broadcast interval duration to all processes
     
     if (size < (dim[0]*dim[1])+1) { // insufficient number of processes for 2d grid & base station
         printf("Insufficient number of processes. Try smaller values of row & col or larger values of processes");
@@ -68,13 +76,26 @@ int main(int argc, char *argv[]) {
 	MPI_Type_create_struct(4, blocklen, disp, type, &report_type);
 	MPI_Type_commit(&report_type);
 
-    for (iteration = 0; iteration < NUM_ITERATIONS; iteration++) { // run NUM_ITERATIONS times
+    for (iteration = 0; iteration < num_iterations; iteration++) { // run num_iterations times
+        printf("iteration %d\n", iteration);
+        //sim_end = MPI_Wtime() + simul_duration;
+        //simulation = true;
+        //while (simulation) {
+        //    if (MPI_Wtime() < sim_end) { // simulation ongoing
 
         if (rank != root) { // sensor in 2d grid
             sensor_node(rank, root, comm, coord, report, report_type);
-        } else {
+            sleep(1);
+            } 
+        else {
             base_station(root, size, report, report_type);
         }
+        //    } else {
+        //        simulation = false;
+        //        MPI_Barrier(MPI_COMM_WORLD);
+        //    }
+        //}
+        
     }
 
     MPI_Type_free(&report_type);
@@ -83,7 +104,7 @@ int main(int argc, char *argv[]) {
 }
 
 void base_station(int rank, int size, struct report_struct report, MPI_Datatype struct_type) {
-    sleep(3);
+    sleep(1);
     int i;
     int msg = 0, flag, sensor_reading;
     while (msg < size-1) {
