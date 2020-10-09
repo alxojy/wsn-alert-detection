@@ -8,6 +8,7 @@ struct report_struct { // struct for node reports sent to base station
     float time_taken;
     char timestamp[26];
     int num_msg; // num messages compared
+    int adj_nodes[4];
 };
 
 void base_station(int rank, int size, struct report_struct report, MPI_Datatype struct_type);
@@ -40,15 +41,11 @@ int main(int argc, char *argv[]) {
         printf("number of intervals:"); // read row
         fflush(stdout);
         scanf("%d", &num_iterations);
-        printf("interval (ie. 0.001):"); // read row
-        fflush(stdout);
-        scanf("%f", &simul_duration);
         dim[0] = 3; dim[1] = 3;
     } 
 
     MPI_Bcast(&dim, 2, MPI_INT, 0, MPI_COMM_WORLD);  // broadcast dimensions to all processes
     MPI_Bcast(&num_iterations, 1, MPI_INT, 0, MPI_COMM_WORLD); // broadcast number of iterations to all processes
-    MPI_Bcast(&simul_duration, 1, MPI_FLOAT, 0, MPI_COMM_WORLD); // broadcast interval duration to all processes
     
     if (size < (dim[0]*dim[1])+1) { // insufficient number of processes for 2d grid & base station
         printf("Insufficient number of processes. Try smaller values of row & col or larger values of processes");
@@ -58,31 +55,28 @@ int main(int argc, char *argv[]) {
 
     struct report_struct report;
     MPI_Datatype report_type;
-	MPI_Datatype type[4] = { MPI_INT, MPI_FLOAT, MPI_CHAR, MPI_INT };
-	int blocklen[4] = { 1,1,26,1 };
-	MPI_Aint disp[4];
+	MPI_Datatype type[5] = { MPI_INT, MPI_FLOAT, MPI_CHAR, MPI_INT, MPI_INT };
+	int blocklen[5] = { 1,1,26,1,4 };
+	MPI_Aint disp[5];
 
 	MPI_Get_address(&report.reading, &disp[0]);
 	MPI_Get_address(&report.time_taken, &disp[1]);
     MPI_Get_address(&report.timestamp, &disp[2]);
     MPI_Get_address(&report.num_msg, &disp[3]);
+    MPI_Get_address(&report.adj_nodes, &disp[4]);
 
-    for(i = 1; i < 4; i++) {
+    for(i = 1; i < 5; i++) {
         disp[i] -= disp[0];
     }
     disp[0] = 0;
 
 	// Create MPI struct
-	MPI_Type_create_struct(4, blocklen, disp, type, &report_type);
+	MPI_Type_create_struct(5, blocklen, disp, type, &report_type);
 	MPI_Type_commit(&report_type);
 
     for (iteration = 0; iteration < num_iterations; iteration++) { // run num_iterations times
         printf("iteration %d\n", iteration);
-        //sim_end = MPI_Wtime() + simul_duration;
-        //simulation = true;
-        //while (simulation) {
-        //    if (MPI_Wtime() < sim_end) { // simulation ongoing
-
+        
         if (rank != root) { // sensor in 2d grid
             sensor_node(rank, root, comm, coord, report, report_type);
             sleep(1);
@@ -90,11 +84,6 @@ int main(int argc, char *argv[]) {
         else {
             base_station(root, size, report, report_type);
         }
-        //    } else {
-        //        simulation = false;
-        //        MPI_Barrier(MPI_COMM_WORLD);
-        //    }
-        //}
         
     }
 
@@ -174,7 +163,7 @@ void sensor_node(int rank, int root, MPI_Comm comm, int coord[], struct report_s
 
     if (right != MPI_PROC_NULL) {
         receive_msg(&right_req, right, NEIGHBOUR_TAG); // try to receive request message from right
-        if (sensor_reading - SENSOR_THRESHOLD < right_req && right_req < sensor_reading + SENSOR_THRESHOLD) {
+        if (sensor_reading - TOLERANCE_RANGE < right_req && right_req < sensor_reading + TOLERANCE_RANGE) {
             send_msg(&sensor_reading, right, READING_TAG); // send reading right
             num_msg++;
         }
@@ -182,7 +171,7 @@ void sensor_node(int rank, int root, MPI_Comm comm, int coord[], struct report_s
 
     if (left != MPI_PROC_NULL) {
         receive_msg(&left_req, left, NEIGHBOUR_TAG); // try to receive request message from left
-        if (sensor_reading - SENSOR_THRESHOLD < left_req && left_req < sensor_reading + SENSOR_THRESHOLD) {
+        if (sensor_reading - TOLERANCE_RANGE < left_req && left_req < sensor_reading + TOLERANCE_RANGE) {
             send_msg(&sensor_reading, left, READING_TAG); // send reading left
             num_msg++;
         }
@@ -190,7 +179,7 @@ void sensor_node(int rank, int root, MPI_Comm comm, int coord[], struct report_s
 
     if (down != MPI_PROC_NULL) {
         receive_msg(&down_req, down, NEIGHBOUR_TAG); // try to receive request message from down
-        if (sensor_reading - SENSOR_THRESHOLD < down_req && down_req < sensor_reading + SENSOR_THRESHOLD) {
+        if (sensor_reading - TOLERANCE_RANGE < down_req && down_req < sensor_reading + TOLERANCE_RANGE) {
             send_msg(&sensor_reading, down, READING_TAG); // send reading down
             num_msg++;
         }
@@ -198,7 +187,7 @@ void sensor_node(int rank, int root, MPI_Comm comm, int coord[], struct report_s
 
     if (up != MPI_PROC_NULL) {
         receive_msg(&up_req, up, NEIGHBOUR_TAG); // try to receive request message from up
-        if (sensor_reading - SENSOR_THRESHOLD < up_req && up_req < sensor_reading + SENSOR_THRESHOLD) {
+        if (sensor_reading - TOLERANCE_RANGE < up_req && up_req < sensor_reading + TOLERANCE_RANGE) {
             send_msg(&sensor_reading, up, READING_TAG); // send reading up
             num_msg++;
         }
@@ -233,6 +222,11 @@ void sensor_node(int rank, int root, MPI_Comm comm, int coord[], struct report_s
             report.time_taken = time_taken;
             strcpy(report.timestamp, tms);
             report.num_msg = num_msg;
+            
+            report.adj_nodes[0] = left_reading;
+            report.adj_nodes[1] = right_reading;
+            report.adj_nodes[2] = up_reading;
+            report.adj_nodes[3] = down_reading;
 
             MPI_Request req;
             MPI_Isend(&report, 1, struct_type, root, BASE_TAG, MPI_COMM_WORLD, &req);
