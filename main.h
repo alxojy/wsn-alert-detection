@@ -9,6 +9,14 @@
 #define BASE_TAG 1
 #define READING_TAG 2
 
+struct report_struct { // struct for node reports sent to base station
+    int reading;
+    float time_taken;
+    char timestamp[26];
+    int num_msg; // num messages compared
+    int adj_nodes[4];
+};
+
 #include <math.h>
 #include <mpi.h>
 #include <stdio.h>
@@ -16,5 +24,6 @@
 #include <string.h>
 #include <time.h>
 #include "nodecomm.c"
+#include "sensornode.c"
 
 #endif // MAIN_H
