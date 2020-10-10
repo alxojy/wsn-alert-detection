@@ -23,7 +23,7 @@ struct report_struct { // struct for node reports sent to base station
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include "nodecomm.c"
-#include "sensornode.c"
+#include "sensornode.h"
+#include "basestation.h"
 
 #endif // MAIN_H
