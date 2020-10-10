@@ -1,6 +1,5 @@
 // alxojy
-// cartesian topology https://www.codingame.com/playgrounds/47058/have-fun-with-mpi-in-c/mpi-process-topologies
-// unicast
+// to run: mpicc main.c basestation.c sensornode.c nodecomm.c
 #include "main.h"
 
 int main(int argc, char *argv[]) {
@@ -78,5 +77,5 @@ int main(int argc, char *argv[]) {
 
     MPI_Type_free(&report_type);
     MPI_Finalize();
-    return; // exit
+    return 0; // exit
 }

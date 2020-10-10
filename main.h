@@ -17,6 +17,7 @@ struct report_struct { // struct for node reports sent to base station
     int adj_nodes[4];
 };
 
+// import necessary libraries
 #include <math.h>
 #include <mpi.h>
 #include <stdio.h>

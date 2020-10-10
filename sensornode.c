@@ -1,6 +1,14 @@
 #include "main.h"
 #include "sensornode.h"
 
+// represents a sensor node in WSN network
+// params
+// rank: rank of node
+// root: base station rank
+// comm: communicator in WSN
+// coord: coordinate of node
+// report: struct to send report to base station
+// struct_type: struct type for report
 void sensor_node(int rank, int root, MPI_Comm comm, int coord[], struct report_struct report, MPI_Datatype struct_type) {
     int sensor_reading;
     int left = -1, right = -1, up = -1, down = -1; // neighbours
