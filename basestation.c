@@ -30,11 +30,13 @@ void base_station(int rank, int size, struct report_struct report, MPI_Datatype 
         }
 
     sleep(1); 
+    int num_alerts = 0;
     while (msg < size-1) { // listen to sensor nodes to check for alert
         MPI_Status stat;
         for (i = 0; i < size; i++) {
             MPI_Iprobe(MPI_ANY_SOURCE, BASE_TAG, MPI_COMM_WORLD, &flag, &stat);
             if (flag) { // there exists a message
+                num_alerts++;
                 MPI_Recv(&report, 1, struct_type, stat.MPI_SOURCE, BASE_TAG, MPI_COMM_WORLD, &stat);
                 printf("base-- from %d read %d msg %d time %s", stat.MPI_SOURCE, report.reading, report.num_msg, report.timestamp);
                 fprintf(outputfile, "=============================================\n");
@@ -47,6 +49,7 @@ void base_station(int rank, int size, struct report_struct report, MPI_Datatype 
                     fprintf(outputfile, "Adjacent nodes reading: %d, %d, %d, %d\n", report.adj_nodes[0], report.adj_nodes[1], report.adj_nodes[2], report.adj_nodes[3]);
                     fprintf(outputfile, "*neighbour order: left, right, up, down\n");
                     fprintf(outputfile, "*reading: -999 if neighbour does not exist/\nneighbour reading is not in threshold range\n");
+                    fprintf(outputfile, "Time taken: %f\n", report.time_taken);
                     fprintf(outputfile, "Number of messages exchanged: %d\n", report.num_msg);
                     fprintf(outputfile, "Timestamp: %s", report.timestamp);
                 } 
@@ -58,6 +61,7 @@ void base_station(int rank, int size, struct report_struct report, MPI_Datatype 
                     fprintf(outputfile, "Adjacent nodes reading: %d, %d, %d, %d\n", report.adj_nodes[0], report.adj_nodes[1], report.adj_nodes[2], report.adj_nodes[3]);
                     fprintf(outputfile, "*neighbour order: left, right, up, down\n");
                     fprintf(outputfile, "*reading: -999 if neighbour does not exist/\nneighbour reading is not in threshold range\n");
+                    fprintf(outputfile, "Time taken: %f\n", report.time_taken);
                     fprintf(outputfile, "Number of messages exchanged: %d\n", report.num_msg);
                     fprintf(outputfile, "Timestamp: %s", report.timestamp);
                 }
@@ -66,4 +70,5 @@ void base_station(int rank, int size, struct report_struct report, MPI_Datatype 
         }
         msg++;
     }
+    fprintf(outputfile, "---------------------------------------------\nNumber of alerts: %d\n---------------------------------------------\n", num_alerts);
 }

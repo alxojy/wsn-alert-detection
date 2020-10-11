@@ -20,7 +20,7 @@ int main(int argc, char *argv[]) {
 	MPI_Comm_size(MPI_COMM_WORLD, &size);
     root = size-1;
 
-    if (rank == 0) { // prompt for row & col input
+    if (rank == 0) { // prompt for col, row & number of iterations input
         printf("col:"); // read col
         fflush(stdout);
         scanf("%d", &dim[0]);
@@ -29,7 +29,7 @@ int main(int argc, char *argv[]) {
         scanf("%d", &dim[1]);
         printf("number of intervals:"); // read row
         fflush(stdout);
-        scanf("%d", &num_iterations);
+        scanf("%d", &num_iterations);  // read number of iterations
         //num_iterations = 2;
         //dim[0] = 3; dim[1] = 3;
     } 
@@ -46,14 +46,15 @@ int main(int argc, char *argv[]) {
     outputfile = fopen(OUTPUTFILE, "w");
     MPI_Cart_create(MPI_COMM_WORLD, 2, dim, period, reorder, &comm); // initialise cartesian topology 
 
+    // initialise struct to store sensor node reports
     struct report_struct report;
     MPI_Datatype report_type;
 	MPI_Datatype type[5] = { MPI_INT, MPI_FLOAT, MPI_CHAR, MPI_INT, MPI_INT };
 	int blocklen[5] = { 1,1,26,1,4 };
 	MPI_Aint disp[5];
 
-	MPI_Get_address(&report.reading, &disp[0]);
-	MPI_Get_address(&report.time_taken, &disp[1]);
+	MPI_Get_address(&report.reading, &disp[0]); 
+	MPI_Get_address(&report.time_taken, &disp[1]); 
     MPI_Get_address(&report.timestamp, &disp[2]);
     MPI_Get_address(&report.num_msg, &disp[3]);
     MPI_Get_address(&report.adj_nodes, &disp[4]);
@@ -73,6 +74,7 @@ int main(int argc, char *argv[]) {
             sleep(1);
             } 
         else {
+            fprintf(outputfile, "ITERATION: %d\n", iteration);
             base_station(root, size, report, report_type, outputfile);
         }
     }
