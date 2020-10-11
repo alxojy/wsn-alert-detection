@@ -5,6 +5,7 @@
 ```mpirun -np [num processes] a.out```
 
 ###### TO-DO
+- summary report
 - sentinel value to terminate
 - makefile
 
