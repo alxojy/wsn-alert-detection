@@ -30,7 +30,7 @@ void base_station(int rank, int size, struct report_struct report, MPI_Datatype 
         }
 
     sleep(1); 
-    int num_alerts = 0;
+    int true_alerts = 0, false_alerts = 0, num_alerts = 0;
     while (msg < size-1) { // listen to sensor nodes to check for alert
         MPI_Status stat;
         for (i = 0; i < size; i++) {
@@ -42,6 +42,7 @@ void base_station(int rank, int size, struct report_struct report, MPI_Datatype 
                 fprintf(outputfile, "=============================================\n");
                 // true alert
                 if (inf_reports[stat.MPI_SOURCE].reading - TOLERANCE_RANGE < report.reading && report.reading < inf_reports[stat.MPI_SOURCE].reading + TOLERANCE_RANGE && strcmp(inf_reports[stat.MPI_SOURCE].timestamp, report.timestamp) == 0) { 
+                    true_alerts++;
                     fprintf(outputfile, "ALERT STATUS: %s", "TRUE\n");
                     fprintf(outputfile, "Alert sent from sensor node: %d\n", stat.MPI_SOURCE);
                     fprintf(outputfile, "Sensor node reading: %d\n", report.reading);
@@ -54,6 +55,7 @@ void base_station(int rank, int size, struct report_struct report, MPI_Datatype 
                     fprintf(outputfile, "Timestamp: %s", report.timestamp);
                 } 
                 else { // false alert
+                    false_alerts++;
                     fprintf(outputfile, "ALERT STATUS: %s", "FALSE\n");
                     fprintf(outputfile, "Alert sent from sensor node: %d\n", stat.MPI_SOURCE);
                     fprintf(outputfile, "Sensor node reading: %d\n", report.reading);
@@ -70,5 +72,6 @@ void base_station(int rank, int size, struct report_struct report, MPI_Datatype 
         }
         msg++;
     }
-    fprintf(outputfile, "---------------------------------------------\nNumber of alerts: %d\n---------------------------------------------\n", num_alerts);
+    // summary 
+    fprintf(outputfile, "---------------------------------------------\nNumber of true alerts: %d\nNumber of false alerts: %d\nTotal number of alerts: %d\n---------------------------------------------\n\n", true_alerts, false_alerts, num_alerts);
 }
