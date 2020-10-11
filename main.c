@@ -21,17 +21,17 @@ int main(int argc, char *argv[]) {
     root = size-1;
 
     if (rank == 0) { // prompt for row & col input
-        //printf("col:"); // read col
-        //fflush(stdout);
-        //scanf("%d", &dim[0]);
-        //printf("row:"); // read row
-        //fflush(stdout);
-        //scanf("%d", &dim[1]);
-        //printf("number of intervals:"); // read row
-        //fflush(stdout);
-        //scanf("%d", &num_iterations);
-        num_iterations = 2;
-        dim[0] = 3; dim[1] = 3;
+        printf("col:"); // read col
+        fflush(stdout);
+        scanf("%d", &dim[0]);
+        printf("row:"); // read row
+        fflush(stdout);
+        scanf("%d", &dim[1]);
+        printf("number of intervals:"); // read row
+        fflush(stdout);
+        scanf("%d", &num_iterations);
+        //num_iterations = 2;
+        //dim[0] = 3; dim[1] = 3;
     } 
 
     MPI_Bcast(&dim, 2, MPI_INT, 0, MPI_COMM_WORLD);  // broadcast dimensions to all processes
