@@ -14,6 +14,7 @@ int main(int argc, char *argv[]) {
     int dim[2], period[2], reorder, coord[2], id; // dim = [col, row]
     period[0] = 0; period[1] = 0; reorder = 0;
 
+    // initialise MPI
     MPI_Init(&argc, &argv); 
 	MPI_Comm_rank(MPI_COMM_WORLD, &rank); 
 	MPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -36,10 +37,13 @@ int main(int argc, char *argv[]) {
     MPI_Bcast(&dim, 2, MPI_INT, 0, MPI_COMM_WORLD);  // broadcast dimensions to all processes
     MPI_Bcast(&num_iterations, 1, MPI_INT, 0, MPI_COMM_WORLD); // broadcast number of iterations to all processes
     
-    if (size < (dim[0]*dim[1])+1) { // insufficient number of processes for 2d grid & base station
+    if (size < (dim[0]*dim[1])+1) { // insufficient number of processes for 2D grid & base station
         printf("Insufficient number of processes. Try smaller values of row & col or larger values of processes");
+        MPI_Abort(MPI_COMM_WORLD, 1);
     }   
 
+    FILE *outputfile; // create output file
+    outputfile = fopen(OUTPUTFILE, "w");
     MPI_Cart_create(MPI_COMM_WORLD, 2, dim, period, reorder, &comm); // initialise cartesian topology 
 
     struct report_struct report;
@@ -64,17 +68,16 @@ int main(int argc, char *argv[]) {
 	MPI_Type_commit(&report_type);
 
     for (iteration = 0; iteration < num_iterations; iteration++) { // run num_iterations times
-        printf("iteration %d\n", iteration);
-        
         if (rank != root) { // sensor in 2d grid
             sensor_node(rank, root, comm, coord, report, report_type);
             sleep(1);
             } 
         else {
-            base_station(root, size, report, report_type);
+            base_station(root, size, report, report_type, outputfile);
         }
     }
 
+    fclose(outputfile);
     MPI_Type_free(&report_type);
     MPI_Finalize();
     return 0; // exit

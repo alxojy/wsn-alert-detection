@@ -8,6 +8,7 @@
 #define NEIGHBOUR_TAG 0
 #define BASE_TAG 1
 #define READING_TAG 2
+#define OUTPUTFILE "logs.txt"
 
 struct report_struct { // struct for node reports sent to base station
     int reading;
