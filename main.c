@@ -37,8 +37,7 @@ int main(int argc, char *argv[]) {
     MPI_Bcast(&dim, 2, MPI_INT, 0, MPI_COMM_WORLD);  // broadcast dimensions to all processes
     MPI_Bcast(&num_iterations, 1, MPI_INT, 0, MPI_COMM_WORLD); // broadcast number of iterations to all processes
     
-    if (size < (dim[0]*dim[1])+1) { // insufficient number of processes for 2D grid & base station
-        printf("Insufficient number of processes. Try smaller values of row & col or larger values of processes");
+    if (size != (dim[0]*dim[1])+1) { // incorrect dimensions for 2d grid + base station
         MPI_Abort(MPI_COMM_WORLD, 1);
     }   
 

@@ -21,15 +21,13 @@ void sensor_node(int rank, int root, MPI_Comm comm, int coord[], struct report_s
 
     int source;
     MPI_Cart_coords(comm, rank, 2, coord);
-    MPI_Cart_shift(comm, 1, -1, &source, &left); 
-    MPI_Cart_shift(comm, 1, 1, &source, &right); 
-    MPI_Cart_shift(comm, 0, -1, &source, &up);
-    MPI_Cart_shift(comm, 0, 1, &source, &down);
+    MPI_Cart_shift(comm, 0, 1, &up, &down);
+    MPI_Cart_shift(comm, 1, 1, &left, &right);
 
     srandom(time(NULL) | rank); // seed
     sensor_reading = (random() % (MAX_READING - MIN_READING + 1)) + MIN_READING; // random sensor reading
     printf("rank %d reading %d \n", rank, sensor_reading);
-
+    
     start = MPI_Wtime(); // get start time
     if(sensor_reading > SENSOR_THRESHOLD) { // over threshold. trigger an event
         // record timestamp when event is triggered
