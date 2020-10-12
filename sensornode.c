@@ -19,7 +19,6 @@ void sensor_node(int rank, int root, MPI_Comm comm, int coord[], struct report_s
     int num_msg = 0;
     time_t t; struct tm *tm; char* tms; 
 
-    int source;
     MPI_Cart_coords(comm, rank, 2, coord);
     MPI_Cart_shift(comm, 0, 1, &up, &down);
     MPI_Cart_shift(comm, 1, 1, &left, &right);
