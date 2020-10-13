@@ -8,6 +8,5 @@
 Refer to ```logs.txt```
 
 ###### TO-DO
-- sentinel value to terminate
 - makefile
 
