@@ -127,10 +127,7 @@ void sensor_node(int rank, int root, MPI_Comm comm, int coord[], struct report_s
             MPI_Request req;
             MPI_Isend(&report, 1, struct_type, root, BASE_TAG, MPI_COMM_WORLD, &req);
             
-            printf("rank %d more than \n", rank);
-            printf("rank %d alert time %s", rank, report.timestamp);
-            printf("rank %d time %f\n", rank, report.time_taken);
-            printf("rank %d num msg %d \n", rank, report.num_msg);
+            printf("rank %d sent an alert to the base station\n", rank);
         }
     }
 

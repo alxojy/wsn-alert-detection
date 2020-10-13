@@ -38,7 +38,10 @@ int main(int argc, char *argv[]) {
     MPI_Bcast(&num_iterations, 1, MPI_INT, 0, MPI_COMM_WORLD); // broadcast number of iterations to all processes
     
     if (size != (dim[0]*dim[1])+1) { // incorrect dimensions for 2d grid + base station
-        MPI_Abort(MPI_COMM_WORLD, 1);
+        if (rank == root) 
+            printf("ERROR: Run with (row x col) + 1 processes\n");
+        MPI_Finalize();
+        exit(0);
     }   
 
     FILE *outputfile; // create output file
@@ -67,6 +70,11 @@ int main(int argc, char *argv[]) {
 	MPI_Type_create_struct(5, blocklen, disp, type, &report_type);
 	MPI_Type_commit(&report_type);
 
+    int stop = 1;
+    if (rank == root) {
+        printf("Enter 0 to stop\n");
+    }
+    
     for (iteration = 0; iteration < num_iterations; iteration++) { // run num_iterations times
         if (rank != root) { // sensor in 2d grid
             sensor_node(rank, root, comm, coord, report, report_type);
@@ -75,6 +83,16 @@ int main(int argc, char *argv[]) {
         else {
             fprintf(outputfile, "ITERATION: %d\n", iteration);
             base_station(root, size, report, report_type, outputfile);
+        }
+        
+        MPI_Bcast(&stop, 1, MPI_INT, 0, MPI_COMM_WORLD);
+
+        if (rank == 0) {
+            scanf("%d", &stop);
+        }
+
+        if (stop == 0) {
+            break;
         }
     }
 
