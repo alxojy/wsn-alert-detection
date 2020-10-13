@@ -8,6 +8,7 @@ int main(int argc, char *argv[]) {
     int sensor_reading;
     enum boolean { false = 0, true = 1 } simulation; 
     float simul_duration, sim_end; // simulation duration: 4 milliseconds
+    fd_set rfds; struct timeval tv; int stop; // variables for sentinel value
 
     // params for cartesian topology
     MPI_Comm comm;
@@ -70,28 +71,28 @@ int main(int argc, char *argv[]) {
 	MPI_Type_create_struct(5, blocklen, disp, type, &report_type);
 	MPI_Type_commit(&report_type);
 
-    int stop = 1;
-    if (rank == root) {
-        printf("Enter 0 to stop\n");
-    }
-    
+    if (rank == root) 
+        printf("Enter any value (int >= 0) to stop program:\n"); 
+
     for (iteration = 0; iteration < num_iterations; iteration++) { // run num_iterations times
+        FD_ZERO(&rfds); 
+        FD_SET(0, &rfds);
+        tv.tv_sec = 1;
         if (rank != root) { // sensor in 2d grid
             sensor_node(rank, root, comm, coord, report, report_type);
             sleep(1);
-            } 
+        } 
         else {
             fprintf(outputfile, "ITERATION: %d\n", iteration);
             base_station(root, size, report, report_type, outputfile);
         }
-        
-        MPI_Bcast(&stop, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
         if (rank == 0) {
-            scanf("%d", &stop);
+            stop = select(1, &rfds, NULL, NULL, &tv); // get sentinel value
         }
+        MPI_Bcast(&stop, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
-        if (stop == 0) {
+        if (stop) { // sentinel value received
             break;
         }
     }

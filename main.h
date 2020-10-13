@@ -24,6 +24,7 @@ struct report_struct { // struct for node reports sent to base station
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/select.h>
 #include <time.h>
 #include "sensornode.h"
 #include "basestation.h"
