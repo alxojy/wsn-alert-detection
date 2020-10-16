@@ -21,29 +21,23 @@ int main(int argc, char *argv[]) {
 	MPI_Comm_size(MPI_COMM_WORLD, &size);
     root = size-1;
 
-    if (rank == 0) { // prompt for col, row & number of iterations input
-        printf("col:"); // read col
-        fflush(stdout);
-        scanf("%d", &dim[0]);
-        printf("row:"); // read row
-        fflush(stdout);
-        scanf("%d", &dim[1]);
+    if (argc == 3) {
+		dim[1] = atoi (argv[1]); // number of row
+		dim[0] = atoi (argv[2]); // number of column
+		if((dim[0]*dim[1])+1 != size) {
+			if(rank == 0) 
+            printf("ERROR: Enter row & col into command line\nPlease ensure that there are sufficient number of processes (row x col) + 1\n");
+			MPI_Finalize(); 
+			return 0;
+		}
+    }
+
+    if (rank == 0) { // prompt for number of iterations input
         printf("number of intervals:"); // read row
         fflush(stdout);
         scanf("%d", &num_iterations);  // read number of iterations
-        //num_iterations = 2;
-        //dim[0] = 3; dim[1] = 3;
     } 
-
-    MPI_Bcast(&dim, 2, MPI_INT, 0, MPI_COMM_WORLD);  // broadcast dimensions to all processes
     MPI_Bcast(&num_iterations, 1, MPI_INT, 0, MPI_COMM_WORLD); // broadcast number of iterations to all processes
-    
-    if (size != (dim[0]*dim[1])+1) { // incorrect dimensions for 2d grid + base station
-        if (rank == root) 
-            printf("ERROR: Run with (row x col) + 1 processes\n");
-        MPI_Finalize();
-        exit(0);
-    }   
 
     FILE *outputfile; // create output file
     outputfile = fopen(OUTPUTFILE, "w");
@@ -72,7 +66,7 @@ int main(int argc, char *argv[]) {
 	MPI_Type_commit(&report_type);
 
     if (rank == root) 
-        printf("Enter any value (int >= 0) to stop program:\n"); 
+        printf("Press enter to stop program:\n"); 
 
     for (iteration = 0; iteration < num_iterations; iteration++) { // run num_iterations times
         FD_ZERO(&rfds); 
