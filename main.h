@@ -15,7 +15,8 @@ struct report_struct { // struct for node reports sent to base station
     float time_taken;
     char timestamp[26];
     int num_msg; // num messages compared
-    int adj_nodes[4];
+    int adj_nodes[4]; // adjacent nodes rank
+    int adj_reading[4]; // adjacent nodes reading
 };
 
 // import necessary libraries

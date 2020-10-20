@@ -9,11 +9,12 @@
 // coord: coordinate of node
 // report: struct to send report to base station
 // struct_type: struct type for report
-void sensor_node(int rank, int root, MPI_Comm comm, int coord[], struct report_struct report, MPI_Datatype struct_type) {
-    int sensor_reading, i;
+int sensor_node(int rank, int root, MPI_Comm comm, int coord[], struct report_struct report, MPI_Datatype struct_type) {
+    int sensor_reading, i, j;
     int neighbours[4] = {-1, -1, -1, -1}; // left, right, up, down
     int neighbour_req[4] = {-999, -999, -999, -999}; // store request messages
     int neighbour_reading[4] = {-999, -999, -999, -999}; // store neighbour readings
+    int alert_sent = 0;
 
     float start, time_taken;
     int num_msg = 0;
@@ -49,7 +50,6 @@ void sensor_node(int rank, int root, MPI_Comm comm, int coord[], struct report_s
             receive_msg(&neighbour_req[i], neighbours[i], NEIGHBOUR_TAG); // try to receive request message from neighbour
             if (sensor_reading - TOLERANCE_RANGE < neighbour_req[i] && neighbour_req[i] < sensor_reading + TOLERANCE_RANGE) {
                 send_msg(&sensor_reading, neighbours[i], READING_TAG); // send reading to neighbour
-                num_msg++;
             }
         }
     }
@@ -57,8 +57,11 @@ void sensor_node(int rank, int root, MPI_Comm comm, int coord[], struct report_s
     MPI_Barrier(comm);
 
     for (i = 0; i < 4; i++) { // loop through all 4 neighbours in left, right, up, down order
-        if (neighbours[i] != MPI_PROC_NULL)  // neighbour exists
+        if (neighbours[i] != MPI_PROC_NULL)  { // neighbour exists 
             receive_msg(&neighbour_reading[i], neighbours[i], READING_TAG); // try to receive requested reading from neighbour
+            if (neighbour_reading[i] > 0)
+                num_msg++;
+        }
     }
 
     if (sensor_reading > SENSOR_THRESHOLD) {
@@ -66,17 +69,17 @@ void sensor_node(int rank, int root, MPI_Comm comm, int coord[], struct report_s
         if ((neighbour_reading[0] > -1 && neighbour_reading[1] > -1) || (neighbour_reading[0] > -1 && neighbour_reading[2] > -1) || 
         (neighbour_reading[0] > -1 && neighbour_reading[3] > -1) || (neighbour_reading[1] > -1 && neighbour_reading[2] > -1) || 
         (neighbour_reading[1] > -1 && neighbour_reading[3] > -1) || (neighbour_reading[2] > -1 && neighbour_reading[3] > -1))  {
-
+            alert_sent = 1;
             time_taken = MPI_Wtime() - start; // calculate total time taken by a sensor node
             report.reading = sensor_reading; // sensor node reading
             report.time_taken = time_taken; 
             strcpy(report.timestamp, tms); // timestamp of event
             report.num_msg = num_msg; // number of messages exchanged
-            
-            report.adj_nodes[0] = neighbour_reading[0]; // left reading
-            report.adj_nodes[1] = neighbour_reading[1]; // right reading
-            report.adj_nodes[2] = neighbour_reading[2]; // up reading
-            report.adj_nodes[3] = neighbour_reading[3]; // down reading
+
+            for (j = 0; j < 4; j++) {
+                report.adj_nodes[j] = neighbours[j]; // neighbour rank (left, right, up, down)
+                report.adj_reading[j] = neighbour_reading[j]; // neighbour readings
+            }
 
             MPI_Request req;
             MPI_Isend(&report, 1, struct_type, root, BASE_TAG, MPI_COMM_WORLD, &req);
@@ -86,4 +89,6 @@ void sensor_node(int rank, int root, MPI_Comm comm, int coord[], struct report_s
     }
 
     MPI_Barrier(comm);
+
+    return alert_sent;
 }
