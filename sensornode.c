@@ -26,7 +26,6 @@ int sensor_node(int rank, int root, MPI_Comm comm, int coord[], struct report_st
 
     srandom(time(NULL) | rank); // seed
     sensor_reading = (random() % (MAX_READING - MIN_READING + 1)) + MIN_READING; // random sensor reading
-    printf("rank %d reading %d \n", rank, sensor_reading);
     
     start = MPI_Wtime(); // get start time
     if(sensor_reading > SENSOR_THRESHOLD) { // over threshold. trigger an event
@@ -83,8 +82,6 @@ int sensor_node(int rank, int root, MPI_Comm comm, int coord[], struct report_st
 
             MPI_Request req;
             MPI_Isend(&report, 1, struct_type, root, BASE_TAG, MPI_COMM_WORLD, &req);
-            
-            printf("rank %d sent an alert to the base station\n", rank);
         }
     }
 

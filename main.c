@@ -1,5 +1,8 @@
 // alxojy
-// to run: mpicc main.c basestation.c sensornode.c nodecomm.c
+// to run: 
+// 1. in terminal enter make
+// 2. mpirun -np [number of processes] WSN [rows] [cols]
+
 #include "main.h"
 
 int main(int argc, char *argv[]) {
@@ -106,7 +109,7 @@ int main(int argc, char *argv[]) {
         fprintf(fp, "Total number of alerts sent to the base station: %d\n", num_alerts);
     }
     else {
-        fprintf(fp, "Total number of alerts sent node %d: %d\n", rank, alert_sent);
+        fprintf(fp, "Total number of alerts sent by node %d: %d\n", rank, alert_sent);
     }
     
     fclose(fp);

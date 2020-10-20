@@ -46,7 +46,6 @@ int base_station(int rank, int size, struct report_struct report, MPI_Datatype s
             if (flag) { // there exists a message
                 num_alerts++;
                 MPI_Recv(&report, 1, struct_type, stat.MPI_SOURCE, BASE_TAG, MPI_COMM_WORLD, &stat);
-                printf("base-- from %d read %d msg %d time %s", stat.MPI_SOURCE, report.reading, report.num_msg, report.timestamp);
                 fprintf(outputfile, "=============================================\n");
                 // true alert
                 if (inf_reports[stat.MPI_SOURCE].reading - TOLERANCE_RANGE < report.reading && report.reading < inf_reports[stat.MPI_SOURCE].reading + TOLERANCE_RANGE && strcmp(inf_reports[stat.MPI_SOURCE].timestamp, report.timestamp) == 0) { 
