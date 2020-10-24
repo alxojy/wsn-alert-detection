@@ -1,12 +1,8 @@
-# FIT3143-A2
+# FIT3143 Assignment 2
 
 ###### To run 
-```mpicc -pthread main.c basestation.c sensornode.c nodecomm.c -o a.out``` <br>
-```mpirun -np [num processes] a.out [rows] [cols]```
+```make``` <br>
+```mpirun -np [num processes] WSN [rows] [cols]```
 
 ###### Results
 Refer to ```logs.txt```
-
-###### TO-DO
-- makefile
-
