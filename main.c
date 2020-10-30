@@ -1,4 +1,4 @@
-// alxojy
+// MA_Lab-01_Team_05
 // to run: 
 // 1. open terminal
 // 2. make
@@ -24,7 +24,7 @@ int main(int argc, char *argv[]) {
 	MPI_Comm_size(MPI_COMM_WORLD, &size);
     root = size-1;
 
-    if (argc == 4) {
+    if (argc == 4) { 
 		dim[1] = atoi (argv[1]); // number of row
 		dim[0] = atoi (argv[2]); // number of column
         num_iterations = atoi (argv[3]); // number of iterations
@@ -72,7 +72,7 @@ int main(int argc, char *argv[]) {
 	MPI_Type_commit(&report_type);
 
     if (rank == root) 
-        printf("Press enter to stop program:\n"); 
+        printf("Press enter to stop program:\n"); // print prompt for sentinel value
 
     start = MPI_Wtime();
     for (iteration = 0; iteration < num_iterations; iteration++) { // run num_iterations times
@@ -80,12 +80,12 @@ int main(int argc, char *argv[]) {
         FD_SET(0, &rfds);
         tv.tv_sec = 1;
         if (rank != root) { // sensor in 2d grid
-            alert_sent += sensor_node(rank, root, comm, coord, report, report_type);
-            sleep(1);
+            alert_sent += sensor_node(rank, root, comm, coord, report, report_type); // number of alerts sent per node
+            sleep(1); // sleep while base station is collecting reports sent by sensor nodes
         } 
         else {
             fprintf(outputfile, "ITERATION: %d\n", iteration);
-            num_alerts += base_station(root, size, report, report_type, outputfile);
+            num_alerts += base_station(root, size, report, report_type, outputfile); // number of alerts received by base station
         }
 
         if (rank == 0) {
@@ -100,12 +100,11 @@ int main(int argc, char *argv[]) {
 
     fclose(outputfile);
 
-
     // overall summary
     FILE *fp; // create output file
     fp = fopen(OUTPUTFILE, "a+");
     
-    if (rank == size-1) {
+    if (rank == size-1) { // base station logs
         simul_duration =  MPI_Wtime() - start;
         fprintf(fp, "Total simulation time: %f\n", simul_duration);
         fprintf(fp, "Total number of alerts sent to the base station: %d\n", num_alerts);

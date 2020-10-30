@@ -3213,14 +3213,14 @@ Number of false alerts: 2
 Total number of alerts: 3
 ---------------------------------------------
 
+Total number of alerts sent by node 4: 31
+Total number of alerts sent by node 8: 14
+Total number of alerts sent by node 6: 22
+Total number of alerts sent by node 1: 22
+Total number of alerts sent by node 3: 22
+Total number of alerts sent by node 7: 20
+Total number of alerts sent by node 2: 18
+Total number of alerts sent by node 5: 22
+Total number of alerts sent by node 0: 17
 Total simulation time: 200.188171
 Total number of alerts sent to the base station: 188
-Total number of alerts sent by node 0: 17
-Total number of alerts sent by node 1: 22
-Total number of alerts sent by node 2: 18
-Total number of alerts sent by node 3: 22
-Total number of alerts sent by node 4: 31
-Total number of alerts sent by node 5: 22
-Total number of alerts sent by node 6: 22
-Total number of alerts sent by node 7: 20
-Total number of alerts sent by node 8: 14
