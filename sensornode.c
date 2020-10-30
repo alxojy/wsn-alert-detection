@@ -74,6 +74,7 @@ int sensor_node(int rank, int root, MPI_Comm comm, int coord[], struct report_st
             report.time_taken = time_taken; 
             strcpy(report.timestamp, tms); // timestamp of event
             report.num_msg = num_msg; // number of messages exchanged
+            memcpy(report.ip_address, get_ip_address(), 15);
 
             for (j = 0; j < 4; j++) {
                 report.adj_nodes[j] = neighbours[j]; // neighbour rank (left, right, up, down)

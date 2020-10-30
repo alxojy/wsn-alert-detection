@@ -1,8 +1,8 @@
 // alxojy
 // to run: 
-// 1. in terminal enter make
-// 2. mpirun -np [number of processes] WSN [rows] [cols]
-
+// 1. open terminal
+// 2. make
+// 3. mpirun -np [number of processes] WSN [rows] [cols] [num of iterations]
 #include "main.h"
 
 int main(int argc, char *argv[]) {
@@ -24,23 +24,23 @@ int main(int argc, char *argv[]) {
 	MPI_Comm_size(MPI_COMM_WORLD, &size);
     root = size-1;
 
-    if (argc == 3) {
+    if (argc == 4) {
 		dim[1] = atoi (argv[1]); // number of row
 		dim[0] = atoi (argv[2]); // number of column
+        num_iterations = atoi (argv[3]); // number of iterations
 		if((dim[0]*dim[1])+1 != size) {
 			if(rank == 0) 
             printf("ERROR: Enter row & col into command line\nPlease ensure that there are sufficient number of processes (row x col) + 1\n");
 			MPI_Finalize(); 
 			return 0;
 		}
-    }
 
-    if (rank == 0) { // prompt for number of iterations input
-        printf("number of intervals:"); // read row
-        fflush(stdout);
-        scanf("%d", &num_iterations);  // read number of iterations
-    } 
-    MPI_Bcast(&num_iterations, 1, MPI_INT, 0, MPI_COMM_WORLD); // broadcast number of iterations to all processes
+        if (num_iterations <= 0) {
+            printf("ERROR: Number of iterations must be > 0\n");
+			MPI_Finalize(); 
+			return 0;
+        }
+    }
 
     FILE *outputfile; // create output file
     outputfile = fopen(OUTPUTFILE, "w");
@@ -49,9 +49,9 @@ int main(int argc, char *argv[]) {
     // initialise struct to store sensor node reports
     struct report_struct report;
     MPI_Datatype report_type;
-	MPI_Datatype type[6] = { MPI_INT, MPI_FLOAT, MPI_CHAR, MPI_INT, MPI_INT, MPI_INT };
-	int blocklen[6] = { 1,1,26,1,4,4 };
-	MPI_Aint disp[6];
+	MPI_Datatype type[7] = { MPI_INT, MPI_FLOAT, MPI_CHAR, MPI_INT, MPI_INT, MPI_INT, MPI_CHAR };
+	int blocklen[7] = { 1,1,26,1,4,4,15 };
+	MPI_Aint disp[7];
 
 	MPI_Get_address(&report.reading, &disp[0]); 
 	MPI_Get_address(&report.time_taken, &disp[1]); 
@@ -59,14 +59,15 @@ int main(int argc, char *argv[]) {
     MPI_Get_address(&report.num_msg, &disp[3]);
     MPI_Get_address(&report.adj_nodes, &disp[4]);
     MPI_Get_address(&report.adj_reading, &disp[5]);
+    MPI_Get_address(&report.ip_address, &disp[6]);
 
-    for(i = 1; i < 6; i++) {
+    for(i = 1; i < 7; i++) {
         disp[i] -= disp[0];
     }
     disp[0] = 0;
 
 	// Create MPI struct
-	MPI_Type_create_struct(6, blocklen, disp, type, &report_type);
+	MPI_Type_create_struct(7, blocklen, disp, type, &report_type);
 	MPI_Type_commit(&report_type);
 
     if (rank == root) 
@@ -89,7 +90,7 @@ int main(int argc, char *argv[]) {
         if (rank == 0) {
             stop = select(1, &rfds, NULL, NULL, &tv); // get sentinel value
         }
-        MPI_Bcast(&stop, 1, MPI_INT, 0, MPI_COMM_WORLD);
+        MPI_Bcast(&stop, 1, MPI_INT, 0, MPI_COMM_WORLD); // send termination message to all processes
 
         if (stop) { // sentinel value received
             break;
