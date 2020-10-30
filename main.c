@@ -49,9 +49,9 @@ int main(int argc, char *argv[]) {
     // initialise struct to store sensor node reports
     struct report_struct report;
     MPI_Datatype report_type;
-	MPI_Datatype type[7] = { MPI_INT, MPI_FLOAT, MPI_CHAR, MPI_INT, MPI_INT, MPI_INT, MPI_CHAR };
-	int blocklen[7] = { 1,1,26,1,4,4,15 };
-	MPI_Aint disp[7];
+	MPI_Datatype type[8] = { MPI_INT, MPI_FLOAT, MPI_CHAR, MPI_INT, MPI_INT, MPI_INT, MPI_CHAR, MPI_CHAR };
+	int blocklen[8] = { 1,1,26,1,4,4,15,18 };
+	MPI_Aint disp[8];
 
 	MPI_Get_address(&report.reading, &disp[0]); 
 	MPI_Get_address(&report.time_taken, &disp[1]); 
@@ -60,14 +60,15 @@ int main(int argc, char *argv[]) {
     MPI_Get_address(&report.adj_nodes, &disp[4]);
     MPI_Get_address(&report.adj_reading, &disp[5]);
     MPI_Get_address(&report.ip_address, &disp[6]);
+    MPI_Get_address(&report.mac_address, &disp[7]);
 
-    for(i = 1; i < 7; i++) {
+    for(i = 1; i < 8; i++) {
         disp[i] -= disp[0];
     }
     disp[0] = 0;
 
 	// Create MPI struct
-	MPI_Type_create_struct(7, blocklen, disp, type, &report_type);
+	MPI_Type_create_struct(8, blocklen, disp, type, &report_type);
 	MPI_Type_commit(&report_type);
 
     if (rank == root) 

@@ -64,6 +64,7 @@ int base_station(int rank, int size, struct report_struct report, MPI_Datatype s
                     fprintf(outputfile, "Number of messages exchanged: %d\n", report.num_msg);
                     fprintf(outputfile, "Timestamp: %s", report.timestamp);
                     fprintf(outputfile, "IP address: %s\n", report.ip_address);
+                    fprintf(outputfile, "MAC address: %s\n", report.mac_address);
                 } 
                 else { // false alert
                     false_alerts++;
@@ -81,6 +82,7 @@ int base_station(int rank, int size, struct report_struct report, MPI_Datatype s
                     fprintf(outputfile, "Number of messages exchanged: %d\n", report.num_msg);
                     fprintf(outputfile, "Timestamp: %s", report.timestamp);
                     fprintf(outputfile, "IP address: %s\n", report.ip_address);
+                    fprintf(outputfile, "MAC address: %s\n", report.mac_address);
                 }
                 break;
             }

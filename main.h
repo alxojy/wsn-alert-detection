@@ -17,7 +17,8 @@ struct report_struct { // struct for node reports sent to base station
     int num_msg; // num messages compared
     int adj_nodes[4]; // adjacent nodes rank
     int adj_reading[4]; // adjacent nodes reading
-    int ip_address[15]; // store ip address of node
+    char ip_address[15]; // store ip address of node
+    char mac_address[18]; // store mac address of node
 };
 
 // import necessary libraries
