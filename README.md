@@ -35,7 +35,7 @@ openmpi
 
 #### To run 
 ```make``` <br>
-```mpirun -np [num processes] WSN [rows] [cols]```
+```mpirun -np [num processes] WSN [rows] [cols] [num iterations]```
 
 #### Results
 Refer to ```logs.txt```
