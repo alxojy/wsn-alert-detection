@@ -10,7 +10,7 @@ int main(int argc, char *argv[]) {
     int iteration, i, num_iterations, num_alerts = 0, alert_sent = 0;
     int sensor_reading;
     enum boolean { false = 0, true = 1 } simulation; 
-    float simul_duration, start; // simulation duration: 4 milliseconds
+    float simul_duration, start; 
     fd_set rfds; struct timeval tv; int stop; // variables for sentinel value
 
     // params for cartesian topology
