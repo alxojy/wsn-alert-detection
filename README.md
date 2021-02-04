@@ -14,7 +14,7 @@ WSN 2D grid
 
 Sensor nodes can only communicate with its adjacent (left, right, up, down) neighbours and with the base station.  
   
-When the sensor node's reading is above a threshold ```5```, the sensor node requests its neighbours for their reading to compare. Our solution proposes a solution which uses point-to-point communication between nodes.   
+When the sensor node's reading is above a threshold ```5```, the sensor node requests its neighbours for their reading to compare. I proposed a solution which uses point-to-point communication between nodes.   
   
 #### How does it work?
 Example:
